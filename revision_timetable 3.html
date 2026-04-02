@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revision Timetable 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #eeecea;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #1a1916;
+    --text2: #6b6a65;
+    --text3: #9c9b97;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .page { max-width: 860px; margin: 0 auto; }
+
+  header { margin-bottom: 2.5rem; }
+  header h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 4px; }
+  header p { font-size: 14px; color: var(--text2); font-family: 'DM Mono', monospace; }
+
+  .summary-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 2rem; }
+  .sum-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
+    min-width: 120px;
+  }
+  .sum-card .sc-label { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .sum-card .sc-val { font-size: 20px; font-weight: 600; }
+
+  .alloc-section { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 2rem; }
+  .alloc-section h2 { font-size: 11px; font-weight: 500; color: var(--text3); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+  .alloc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .alloc-item { display: flex; align-items: center; gap: 10px; }
+  .alloc-label { font-size: 13px; min-width: 100px; }
+  .alloc-hrs { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; min-width: 28px; }
+  .bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2rem; }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); background: var(--surface); border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 10px; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  .week-block { margin-bottom: 1.75rem; background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); overflow: hidden; }
+  .week-title {
+    font-size: 11px; font-weight: 500; color: var(--text3);
+    font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .day-row {
+    display: grid; grid-template-columns: 72px 1fr;
+    gap: 10px; align-items: start;
+    padding: 8px 14px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .day-row:last-child { border-bottom: none; }
+
+  .day-label { padding-top: 2px; }
+  .day-label .dow { font-size: 13px; font-weight: 500; color: var(--text); }
+  .day-label .ddate { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+  .day-label.weekend .dow { color: #2563eb; }
+
+  .slots { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px; }
+  .slot {
+    padding: 3px 9px; border-radius: 6px;
+    font-size: 12px; font-weight: 500; white-space: nowrap;
+  }
+  .exam-badge {
+    padding: 3px 9px; border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+    background: #fef2f2; color: #b91c1c;
+    border: 0.5px solid #fca5a5;
+  }
+  .hrs-note { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 4px; }
+
+  @media (max-width: 500px) {
+    .day-row { grid-template-columns: 58px 1fr; gap: 8px; }
+    .sum-card { min-width: 100px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Revision Timetable</h1>
+    <p>2 April — 14 June 2026</p>
+  </header>
+  <div class="summary-row" id="summary"></div>
+  <div class="alloc-section">
+    <h2>Subject allocation</h2>
+    <div class="alloc-grid" id="alloc"></div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div id="timetable"></div>
+</div>
+
+<script>
+const SUBJECTS = {
+  maths:       { label: 'Maths',        color: '#B5D4F4', text: '#0C447C' },
+  electronics: { label: 'Electronics',  color: '#C0DD97', text: '#27500A' },
+  cs:          { label: 'Comp. Sci.',   color: '#CECBF6', text: '#3C3489' },
+  physics:     { label: 'Physics',      color: '#FAC775', text: '#633806' },
+  german:      { label: 'German',       color: '#F4C0D1', text: '#72243E' },
+  english_lit: { label: 'English Lit',  color: '#9FE1CB', text: '#085041' },
+  english_lang:{ label: 'English Lang', color: '#5DCAA5', text: '#04342C' },
+  geography:   { label: 'Geography',    color: '#D3D1C7', text: '#444441' },
+  biology:     { label: 'Biology',      color: '#F5C4B3', text: '#712B13' },
+  chemistry:   { label: 'Chemistry',    color: '#AFA9EC', text: '#3C3489' },
+  furthermath: { label: 'Further Maths',color: '#EEEDFE', text: '#26215C' },
+};
+
+const EXAM_DATES = {
+  german_speaking: new Date(2026,3,20),
+  electronics_p1:  new Date(2026,4,7),  german_listen:  new Date(2026,4,7),
+  english_lit1:    new Date(2026,4,11), biology1:       new Date(2026,4,12),
+  geo1:            new Date(2026,4,13), cs1:            new Date(2026,4,13),
+  maths1:          new Date(2026,4,14), german_write:   new Date(2026,4,14),
+  electronics_p2:  new Date(2026,4,15), chem1:          new Date(2026,4,18),
+  english_lit2:    new Date(2026,4,19), cs2:            new Date(2026,4,19),
+  english_lang1:   new Date(2026,4,21), physics1:       new Date(2026,5,2),
+  maths2:          new Date(2026,5,3),  geo2:           new Date(2026,5,3),
+  english_lang2:   new Date(2026,5,5),  biology2:       new Date(2026,5,8),
+  furthermath1:    new Date(2026,5,8),  maths3:         new Date(2026,5,10),
+  geo3:            new Date(2026,5,11), chem2:          new Date(2026,5,12),
+  physics2:        new Date(2026,5,15), furthermath2:   new Date(2026,5,15),
+};
+
+const examDateToSubject = {
+  german_speaking:'german', electronics_p1:'electronics', german_listen:'german',
+  english_lit1:'english_lit', biology1:'biology', geo1:'geography', cs1:'cs',
+  maths1:'maths', german_write:'german', electronics_p2:'electronics', chem1:'chemistry',
+  english_lit2:'english_lit', cs2:'cs', english_lang1:'english_lang', physics1:'physics',
+  maths2:'maths', geo2:'geography', english_lang2:'english_lang', biology2:'biology',
+  furthermath1:'furthermath', maths3:'maths', geo3:'geography', chem2:'chemistry',
+  physics2:'physics', furthermath2:'furthermath',
+};
+
+function subjectsExaminedOnDay(day) {
+  const key = day.toISOString().slice(0,10);
+  const result = new Set();
+  Object.entries(EXAM_DATES).forEach(([name, d]) => {
+    if (d.toISOString().slice(0,10) === key) result.add(examDateToSubject[name]);
+  });
+  return result;
+}
+
+function getDays() {
+  const days = [];
+  const start = new Date(2026,3,2), end = new Date(2026,5,14);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) days.push(new Date(d));
+  return days;
+}
+
+function isWeekend(d) { return d.getDay()===0||d.getDay()===6; }
+function fmtDate(d) { return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function fmtDay(d)  { return d.toLocaleDateString('en-GB',{weekday:'short'}); }
+
+function hoursForDay(d) {
+  const start=new Date(2026,3,2), germanExam=new Date(2026,3,20), examSeason=new Date(2026,4,7);
+  let base;
+  if (d < germanExam) { const frac=(d-start)/(germanExam-start); base=3+frac; }
+  else if (d < examSeason) { const frac=(d-germanExam)/(examSeason-germanExam); base=4+frac; }
+  else base=6;
+  if (isWeekend(d)) base=Math.min(base+1,7);
+  return base;
+}
+
+function subjectLastExam(s) {
+  return {
+    maths:new Date(2026,5,10), electronics:new Date(2026,4,15), cs:new Date(2026,4,19),
+    physics:new Date(2026,5,15), german:new Date(2026,4,14), english_lit:new Date(2026,4,19),
+    english_lang:new Date(2026,5,5), geography:new Date(2026,5,11), biology:new Date(2026,5,8),
+    chemistry:new Date(2026,5,12), furthermath:new Date(2026,5,15),
+  }[s];
+}
+
+function subjectNextExam(s, from) {
+  const map={
+    maths:[new Date(2026,4,14),new Date(2026,5,3),new Date(2026,5,10)],
+    electronics:[new Date(2026,4,7),new Date(2026,4,15)],
+    cs:[new Date(2026,4,13),new Date(2026,4,19)],
+    physics:[new Date(2026,5,2),new Date(2026,5,15)],
+    german:[new Date(2026,3,20),new Date(2026,4,7),new Date(2026,4,14)],
+    english_lit:[new Date(2026,4,11),new Date(2026,4,19)],
+    english_lang:[new Date(2026,4,21),new Date(2026,5,5)],
+    geography:[new Date(2026,4,13),new Date(2026,5,3),new Date(2026,5,11)],
+    biology:[new Date(2026,4,12),new Date(2026,5,8)],
+    chemistry:[new Date(2026,4,18),new Date(2026,5,12)],
+    furthermath:[new Date(2026,5,8),new Date(2026,5,15)],
+  };
+  const dates=(map[s]||[]).filter(d=>d>from);
+  return dates.length?dates[0]:null;
+}
+
+const days=getDays();
+let totalHours=0;
+days.forEach(d=>totalHours+=Math.round(hoursForDay(d)*10)/10);
+
+const mathsH=5, elecH=15, csH=35, physH=35, fmH=5;
+const fixedTotal=mathsH+elecH+csH+physH+fmH;
+const otherTotal=totalHours-fixedTotal;
+const otherEach=Math.max(4,otherTotal/6);
+
+const targetHours={
+  maths:mathsH, electronics:elecH, cs:csH, physics:physH, furthermath:fmH,
+  german:otherEach, english_lit:otherEach, english_lang:otherEach,
+  geography:otherEach, biology:otherEach, chemistry:otherEach,
+};
+
+const allocatedHours={};
+Object.keys(SUBJECTS).forEach(s=>allocatedHours[s]=0);
+const schedule={};
+
+days.forEach(day=>{
+  const sessionCount=Math.max(1,Math.round(hoursForDay(day)));
+  const key=day.toISOString().slice(0,10);
+  const examinedToday=subjectsExaminedOnDay(day);
+
+  const blocked=new Set();
+  examinedToday.forEach(s=>{
+    const next=subjectNextExam(s,day);
+    const daysUntilNext=next?(next-day)/86400000:999;
+    if(daysUntilNext>3)blocked.add(s);
+  });
+
+  const urgent=Object.keys(SUBJECTS).filter(s=>{
+    if(blocked.has(s))return false;
+    const next=subjectNextExam(s,new Date(day.getTime()-86400000));
+    if(!next)return false;
+    const daysUntil=(next-day)/86400000;
+    return daysUntil>=0&&daysUntil<=3&&day<subjectLastExam(s);
+  });
+
+  let eligible=Object.keys(SUBJECTS).filter(s=>{
+    if(blocked.has(s))return false;
+    if(day>=subjectLastExam(s))return false;
+    if(allocatedHours[s]>=targetHours[s]*1.2)return false;
+    return true;
+  });
+
+  eligible.sort((a,b)=>{
+    const na=subjectNextExam(a,day),nb=subjectNextExam(b,day);
+    const da=na?(na-day)/86400000:999,db=nb?(nb-day)/86400000:999;
+    const behA=(targetHours[a]-allocatedHours[a])/targetHours[a];
+    const behB=(targetHours[b]-allocatedHours[b])/targetHours[b];
+    return((1/(db+1))*4+behB)-((1/(da+1))*4+behA);
+  });
+
+  const chosen=[];
+  for(let slot=0;slot<sessionCount;slot++){
+    if(urgent.length>0){
+      const s=urgent[slot%urgent.length];
+      chosen.push(s);allocatedHours[s]+=1;
+    } else {
+      let picked=null;
+      for(let i=0;i<eligible.length;i++){
+        if(!chosen.includes(eligible[i])){picked=eligible[i];break;}
+      }
+      if(!picked&&eligible.length>0)picked=eligible[0];
+      if(picked){chosen.push(picked);allocatedHours[picked]+=1;}
+    }
+  }
+  schedule[key]=chosen;
+});
+
+function getWeekKey(d){
+  const mon=new Date(d);mon.setDate(d.getDate()-((d.getDay()+6)%7));return mon.toISOString().slice(0,10);
+}
+const weeks={};
+days.forEach(d=>{const wk=getWeekKey(d);if(!weeks[wk])weeks[wk]=[];weeks[wk].push(d);});
+
+const examNameMap={
+  german_speaking:'German Speaking', electronics_p1:'Electronics', electronics_p2:'Electronics',
+  german_listen:'German Listening', german_write:'German Writing',
+  english_lit1:'English Lit', english_lit2:'English Lit',
+  english_lang1:'English Lang', english_lang2:'English Lang',
+  biology1:'Biology', biology2:'Biology', geo1:'Geography', geo2:'Geography', geo3:'Geography',
+  cs1:'Comp. Sci.', cs2:'Comp. Sci.', maths1:'Maths', maths2:'Maths', maths3:'Maths',
+  chem1:'Chemistry', chem2:'Chemistry', physics1:'Physics', physics2:'Physics',
+  furthermath1:'Further Maths', furthermath2:'Further Maths',
+};
+
+document.getElementById('summary').innerHTML=
+  [{label:'Start date',val:'2 Apr'},{label:'Est. hours total',val:Math.round(totalHours)},
+   {label:'Exam season',val:'6h/day'},{label:'Weekend peak',val:'7h/day'},{label:'Subjects',val:'11'}]
+  .map(i=>`<div class="sum-card"><div class="sc-label">${i.label}</div><div class="sc-val">${i.val}</div></div>`).join('');
+
+const maxH=Math.max(...Object.values(targetHours));
+document.getElementById('alloc').innerHTML=Object.entries(targetHours).map(([s,h])=>{
+  const v=SUBJECTS[s];
+  return `<div class="alloc-item">
+    <span class="alloc-label"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${v.color};margin-right:6px;vertical-align:middle"></span>${v.label}</span>
+    <span class="alloc-hrs">${Math.round(h)}h</span>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round((h/maxH)*100)}%;background:${v.color}"></div></div>
+  </div>`;
+}).join('');
+
+document.getElementById('legend').innerHTML=Object.entries(SUBJECTS).map(([k,v])=>
+  `<div class="leg-item"><div class="leg-dot" style="background:${v.color}"></div>${v.label}</div>`
+).join('');
+
+const container=document.getElementById('timetable');
+Object.keys(weeks).sort().forEach(wk=>{
+  const wkDays=weeks[wk];
+  const wkDiv=document.createElement('div');
+  wkDiv.className='week-block';
+  wkDiv.innerHTML=`<div class="week-title">Week of ${fmtDate(new Date(wk))}</div>`;
+  wkDays.forEach(day=>{
+    const key=day.toISOString().slice(0,10);
+    const sessions=schedule[key]||[];
+    const hrs=Math.round(hoursForDay(day));
+    const weekend=isWeekend(day);
+    const examToday=[...new Set(
+      Object.entries(EXAM_DATES).filter(([n,ed])=>ed.toISOString().slice(0,10)===key).map(([n])=>examNameMap[n]||n)
+    )];
+    const slotCounts={};
+    sessions.forEach(s=>slotCounts[s]=(slotCounts[s]||0)+1);
+    const slotDisplay=Object.entries(slotCounts).map(([s,count])=>{
+      const v=SUBJECTS[s];
+      return `<span class="slot" style="background:${v.color};color:${v.text}">${v.label}${count>1?' ×'+count:''}</span>`;
+    }).join('');
+    const row=document.createElement('div');
+    row.className='day-row';
+    row.innerHTML=`<div class="day-label${weekend?' weekend':''}">
+      <div class="dow">${fmtDay(day)}</div>
+      <div class="ddate">${fmtDate(day)}</div>
+    </div>
+    <div>
+      <div class="slots">
+        ${examToday.map(e=>`<span class="exam-badge">📝 ${e}</span>`).join('')}
+        ${slotDisplay}
+      </div>
+      <div class="hrs-note">${sessions.length?hrs+'h'+(weekend?' · wknd':''):examToday.length?'exam day':''}
+      </div>
+    </div>`;
+    wkDiv.appendChild(row);
+  });
+  container.appendChild(wkDiv);
+});
+</script>
+</body>
+</html>
